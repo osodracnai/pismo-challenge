@@ -13,3 +13,17 @@ services:
       - 14268:14268   # collector - accept jaeger.thrift directly from clients
       - 14250:14250   # collector - accept model.proto
       - 9411:9411     # collector - Zipkin compatible endpoint (optional)
+  cassandra:
+    image: 'docker.io/bitnami/cassandra:3-debian-10'
+    container_name: cassandra
+    restart: on-failure
+    ports:
+      - '7000:7000'
+      - '9042:9042'
+    volumes:
+      - './pkg/database/resource/script.cql:/docker-entrypoint-initdb.d/script.cql'
+    environment:
+      - CASSANDRA_SEEDS=cassandra
+      - CASSANDRA_PASSWORD_SEEDER=yes
+      - CASSANDRA_PASSWORD=cassandra
+      - CASSANDRA_USER=cassandra

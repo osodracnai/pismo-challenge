@@ -38,6 +38,13 @@ test: ## Test go files
 	go test -race `go list ./...|grep -v "/vendor"` -coverpkg=./... -coverprofile ./cover.out ./...
 
 
+mock: ## generates mocks
+	go install github.com/golang/mock/mockgen@v1.6.0
+	mockgen -source=./pkg/server/accounts/accounts.go -destination=mocks/accounts_mock.go -package=mocks
+	mockgen -source=./pkg/server/transactions/transactions.go -destination=mocks/transactions_mock.go -package=mocks
+
 help: ## print this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {sub("\\\\n",sprintf("\n%22c"," "), $$2);printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+
 

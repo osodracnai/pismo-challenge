@@ -1,5 +1,13 @@
-listen: "http://0.0.0.0:8080"
+server:
+  listen: "http://0.0.0.0:8080"
 jaeger:
   name: server
   log-error: true
   log-info: false
+cassandra:
+  hosts:
+    - localhost
+  port: 9042
+  keyspace: pismo
+  username: cassandra
+  password: cassandra

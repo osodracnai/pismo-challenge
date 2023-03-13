@@ -1,21 +1,12 @@
-package cmd
+package config
 
 import (
-	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/pflag"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
-	"github.com/uber/jaeger-client-go/zipkin"
 	jaegerPrometheus "github.com/uber/jaeger-lib/metrics/prometheus"
 	"io"
 	"time"
 )
-
-func (j *Jaeger) Flags(flags *pflag.FlagSet) {
-	flags.String("jaeger.name", j.Name, "Service name used in jaeger")
-	flags.Bool("jaeger.log-error", j.LogError, "Indicates whether to log jaeger error")
-	flags.Bool("jaeger.log-info", j.LogInfo, "Indicates whether to log jaeger information")
-}
 
 func (j *Jaeger) Config() (io.Closer, error) {
 
@@ -41,13 +32,9 @@ func (j *Jaeger) Config() (io.Closer, error) {
 		LogInfo:  j.LogInfo,
 	}
 	jMetricsFactory := jaegerPrometheus.New()
-	zipkinPropagator := zipkin.NewZipkinB3HTTPHeaderPropagator()
 
 	closer, err := cfg.InitGlobalTracer(
 		j.Name,
-		jaegercfg.Injector(opentracing.HTTPHeaders, zipkinPropagator),
-		jaegercfg.Extractor(opentracing.HTTPHeaders, zipkinPropagator),
-		jaegercfg.ZipkinSharedRPCSpan(true),
 		jaegercfg.Logger(jLogger),
 		jaegercfg.Metrics(jMetricsFactory),
 	)

@@ -2,7 +2,6 @@ package server
 
 import (
 	"github.com/Depado/ginprom"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/osodracnai/pismo-challenge/pkg/server/accounts"
@@ -27,7 +26,7 @@ func New(accounts *accounts.Accounts, transactions *transactions.Transactions) (
 }
 
 // Create New Engine
-func (s *Server) NewEngine() *gin.Engine {
+func (s *Server) NewEngine(enableMetrics bool) *gin.Engine {
 
 	gin.SetMode(gin.ReleaseMode)
 	if logrus.GetLevel() == logrus.DebugLevel {
@@ -36,16 +35,15 @@ func (s *Server) NewEngine() *gin.Engine {
 
 	r := gin.New()
 
-	p := ginprom.New(
-		ginprom.Engine(r),
-		ginprom.Path("/metrics"),
-	)
-
-	if p != nil {
+	if enableMetrics {
+		p := ginprom.New(
+			ginprom.Engine(r),
+			ginprom.Path("/metrics"),
+		)
 		r.Use(p.Instrument())
 	}
+
 	r.Use(gin.Recovery())
-	r.Use(cors.Default())
 
 	r.POST("/accounts", s.accounts.Create)
 	r.GET("/accounts/:accountId", s.accounts.GetById)

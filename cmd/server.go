@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/osodracnai/pismo-challenge/cmd/config"
+	"github.com/osodracnai/pismo-challenge/pkg/database"
 	"github.com/osodracnai/pismo-challenge/pkg/server"
 	"github.com/osodracnai/pismo-challenge/pkg/server/accounts"
 	"github.com/osodracnai/pismo-challenge/pkg/server/transactions"
@@ -19,22 +21,32 @@ func ServerCmd() *cobra.Command {
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
-			var configCmd ConfigServerCmd
+			var configCmd config.Global
 			if err = viper.Unmarshal(&configCmd, DecoderConfigOptions); err != nil {
 				return fmt.Errorf("parse config: %v", err)
 			}
-			acc := accounts.New()
-			trans := transactions.New()
+			cassandra, err := database.NewCassandra(configCmd.Cassandra)
+			if err != nil {
+				return fmt.Errorf("creating cassandra: %v", err)
+			}
+			closer, err := configCmd.Jaeger.Config()
+			if err != nil {
+				return fmt.Errorf("creating jaeger: %v", err)
+			}
+			defer closer.Close()
+
+			acc := accounts.New(cassandra)
+			trans := transactions.New(cassandra)
 			s, err := server.New(acc, trans)
 			if err != nil {
 				return err
 			}
-			listenURL, err := url.Parse(configCmd.Listen)
+			listenURL, err := url.Parse(configCmd.Server.Listen)
 			if err != nil {
 				logrus.Fatal(err)
 			}
 
-			r := s.NewEngine()
+			r := s.NewEngine(true)
 			logrus.Infof("Running server on %s", listenURL.Host)
 			err = r.Run(listenURL.Host)
 			if err != nil {
@@ -45,6 +57,7 @@ func ServerCmd() *cobra.Command {
 	}
 	f := command.Flags()
 	serverFlags(f)
-
+	cassandraFlags(f)
+	jaegerFlags(f)
 	return command
 }

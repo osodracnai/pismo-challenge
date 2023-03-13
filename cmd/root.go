@@ -12,12 +12,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-//The verbose flag value
+// The verbose flag value
 var v string
 
-//The config file path
+// The config file path
 var cfgFile string
-var appName = "app"
+var appName = "pismo-challenge"
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
